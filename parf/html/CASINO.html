@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Майнкоины слот-игра + Активности</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<style>
+  body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  h1 {
+    margin: 10px 0;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px #000;
+  }
+
+  .actions {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ffd700, #ffb700);
+    font-size: 1.2em;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: background 0.3s;
+  }
+
+  .action-btn:hover {
+    background: linear-gradient(135deg, #ffb700, #ffd700);
+  }
+
+  .slot-machine {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 30px 0;
+    perspective: 1000px;
+  }
+
+  .reel {
+    width: 120px;
+    height: 120px;
+    margin: 0 15px;
+    background: linear-gradient(135deg, #444, #222);
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3em;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.5s ease;
+  }
+
+  .spin-button {
+    background: linear-gradient(135deg, #ffd700, #ffb700);
+    border: none;
+    padding: 20px 40px;
+    font-size: 1.5em;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    margin-bottom: 20px;
+    transition: background 0.3s;
+  }
+
+  .spin-button:hover {
+    background: linear-gradient(135deg, #ffb700, #ffd700);
+  }
+
+  .balance {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+  }
+
+  .jackpot {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    color: #ffd700;
+    text-shadow: 1px 1px 2px #000;
+  }
+
+  .result {
+    font-size: 1.4em;
+    margin: 15px 0;
+  }
+
+  /* Модальное окно магазина */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    background: #fff;
+    color: #222;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 80%;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px; right: 15px;
+    font-size: 1.8em;
+    cursor: pointer;
+  }
+
+  h2 {
+    margin-top: 0;
+  }
+
+  .store-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .item {
+    background: linear-gradient(135deg, #eee, #ccc);
+    padding: 10px;
+    border-radius: 10px;
+    width: calc(50% - 20px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  .item h3 {
+    margin: 10px 0 5px;
+  }
+
+  .buy-btn {
+    background: #ffd700;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 5px;
+  }
+
+  .buy-btn:hover {
+    background: #e6b600;
+  }
+
+  /* Стиль для активных эффектов */
+  .active {
+    box-shadow: 0 0 20px #ffd700 inset;
+    transform: scale(1.05);
+  }
+
+</style>
+</head>
+<body>
+
+<h1>Майнкоины слот-игра + Активности</h1>
+
+<div class="actions">
+  <button class="action-btn" id="activateBonus">Активировать бонус</button>
+  <button class="action-btn" id="buyExtraSpin">Купить доп. спин (50)</button>
+  <button class="action-btn" id="openShop">Магазин</button>
+</div>
+
+<div class="jackpot">Джекпот: <span id="jackpotAmount">500</span> майнкоинов</div>
+
+<div class="slot-machine">
+  <div class="reel" id="reel1">🍒</div>
+  <div class="reel" id="reel2">🍋</div>
+  <div class="reel" id="reel3">🔔</div>
+</div>
+
+<button class="spin-button" id="spinBtn">Крутить</button>
+
+<div class="balance" id="balance">Баланс: 1000 майнкоинов</div>
+<div class="result" id="result"></div>
+
+<!-- Модальное окно магазина -->
+<div class="modal" id="shopModal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeShop">&times;</span>
+    <h2>Магазин товаров</h2>
+    <div class="store-items" id="storeItems"></div>
+  </div>
+</div>
+
+<script>
+  // Основные переменные
+  const reels = [
+    ['🍒', '🍋', '🔔', '🍉', '⭐', '🍇', '🍍', '🍎', '💎', '🎲'],
+    ['🍒', '🍋', '🔔', '🍉', '⭐', '🍇', '🍍', '🍎', '💎', '🎲'],
+    ['🍒', '🍋', '🔔', '🍉', '⭐', '🍇', '🍍', '🍎', '💎', '🎲']
+  ];
+
+  let balance = 1000;
+  let jackpot = 500;
+  let extraSpins = 0;
+  let bonusActive = false;
+
+  const reelElements = [
+    document.getElementById('reel1'),
+    document.getElementById('reel2'),
+    document.getElementById('reel3')
+  ];
+
+  const balanceDisplay = document.getElementById('balance');
+  const resultDisplay = document.getElementById('result');
+  const jackpotDisplay = document.getElementById('jackpotAmount');
+
+  const storeItemsContainer = document.getElementById('storeItems');
+
+  const modal = document.getElementById('shopModal');
+
+  // Товары магазина — влияют на игру
+  const storeItems = [
+    { name: 'Двойной шанс', price: 300, effect: 'doubleWin', description: 'Увеличивает шансы на выигрыш в 2 раза на один спин', img: 'https://images.unsplash.com/photo-1612831455544-24e3c7b7c1f8?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80' },
+    { name: 'Бонусный спин', price: 50, effect: 'extraSpin', description: 'Позволяет сделать дополнительный спин бесплатно', img: 'https://images.unsplash.com/photo-1600722869272-8b3f4b7b0f2f?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80' },
+    { name: 'Улучшенные символы', price: 400, effect: 'betterSymbols', description: 'Повышает шанс выпадения редких символов', img: 'https://images.unsplash.com/photo-1549924231-f129b911e442?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80' },
+    { name: 'Магнит', price: 500, effect: 'magnet', description: 'Притягивает редкие символы к барабанам', img: 'https://images.unsplash.com/photo-1616223151884-5b2c8e3f4b8e?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80' }
+  ];
+
+  // Инициализация магазина
+  storeItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <img src="${item.img}" alt="${item.name}" />
+      <h3>${item.name}</h3>
+      <p>Цена: ${item.price} майнкоинов</p>
+      <p>${item.description}</p>
+      <button class="buy-btn" onclick="buyItem('${item.name}', ${item.price}, '${item.effect}')">Купить</button>
+    `;
+    storeItemsContainer.appendChild(div);
+  });
+
+  // Открытие/закрытие магазина
+  document.getElementById('openShop').onclick = () => { modal.style.display = 'flex'; };
+  document.getElementById('closeShop').onclick = () => { modal.style.display = 'none'; };
+  window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; };
+
+  // Функция покупки
+  function buyItem(name, price, effect) {
+    if (balance >= price) {
+      balance -= price;
+      updateBalance();
+      alert(`Вы приобрели ${name}!`);
+      // Активируем эффект
+      activateEffect(effect);
+    } else {
+      alert('Недостаточно майнкоинов!');
+    }
+  }
+
+  // Активация эффектов
+  function activateEffect(effect) {
+    switch(effect) {
+      case 'doubleWin':
+        bonusActive = true;
+        setTimeout(() => { bonusActive = false; alert('Эффект двойного выигрыша закончился!'); }, 30000); // 30 сек
+        break;
+      case 'extraSpin':
+        extraSpins += 1;
+        break;
+      case 'betterSymbols':
+        // Можно реализовать улучшение символов (например, редкие символы чаще)
+        // Для примера увеличим шанс выпадения редких символов
+        break;
+      case 'magnet':
+        // Реализуем эффект привлечения редких символов
+        break;
+    }
+  }
+
+  // Обновление баланса
+  function updateBalance() {
+    balanceDisplay.textContent = `Баланс: ${balance} майнкоинов`;
+  }
+
+  // Получение случайного символа с учетом эффектов
+  function getRandomSymbol() {
+    const rand = Math.random();
+
+    // Шанс выпадения редких символов
+    if (storeActiveEffects.includes('betterSymbols') && rand < 0.2) {
+      return '💎'; // редкий символ
+    } else if (rand < 0.4) {
+      return reels[0][getRandomIndex()];
+    } else {
+      return reels[0][getRandomIndex()];
+    }
+  }
+
+  function getRandomIndex() {
+    return Math.floor(Math.random() * reels[0].length);
+  }
+
+  let storeActiveEffects = [];
+
+  // Включение эффектов магазина
+  function activateEffect(effect) {
+    if (!storeActiveEffects.includes(effect)) {
+      storeActiveEffects.push(effect);
+    }
+    if (effect === 'doubleWin') {
+      bonusActive = true;
+      setTimeout(() => { 
+        bonusActive = false; 
+        storeActiveEffects = storeActiveEffects.filter(e => e !== 'doubleWin'); 
+        alert('Эффект двойного выигрыша закончился!'); 
+      }, 30000);
+    }
+  }
+
+  // Анимация вращения барабанов
+  function spinReel(reelIndex) {
+    return new Promise((resolve) => {
+      let count = 0;
+      const interval = setInterval(() => {
+        const symbol = getRandomSymbol();
+        reelElements[reelIndex].textContent = symbol;
+        count++;
+        if (count > 20) {
+          clearInterval(interval);
+          resolve(symbol);
+        }
+      }, 50 + reelIndex * 50);
+    });
+  }
+
+  // Основная функция вращения
+async function spin() {
+  if (balance < 10) {
+    alert('Недостаточно майнкоинов для ставки!');
+    return;
+  }
+
+  // Проверка на активные эффекты
+  let currentBonus = bonusActive ? 2 : 1;
+
+  // Расчет шансов
+  const chance = Math.random();
+
+  // Определение выигрышных условий
+  let isWin = false;
+  let winMultiplier = 1;
+
+  if (chance < 0.3) {
+    // 30% шанс выиграть
+    isWin = true;
+    winMultiplier = Math.random() < 0.5 ? 2 : 3;
+  } else if (chance < 0.1) {
+    // 10% шанс джекпота
+    isWin = true;
+    winMultiplier = 10;
+  }
+
+  // Снимаем ставку
+  balance -= 10;
+  updateBalance();
+
+  // Вращение барабанов
+  const results = await Promise.all([
+    spinReel(0),
+    spinReel(1),
+    spinReel(2)
+  ]);
+
+  // Проверка на совпадение символов
+  const allEqual = results.every(r => r === results[0]);
+
+  // Проверка на выигрыш
+  if (allEqual && results[0] !== undefined) {
+    if (isWin) {
+      const winAmount = 50 * winMultiplier * currentBonus;
+      balance += winAmount;
+      if (winMultiplier === 10) {
+        // джекпот
+        balance += jackpot;
+        alert(`🎉 Джекпот! Вы выиграли ${winAmount + jackpot} майнкоинов!`);
+        jackpot = 500; // сброс джекпота
+        jackpotDisplay.textContent = jackpot;
+      } else {
+        alert(`Поздравляем! Вы выиграли ${winAmount} майнкоинов!`);
+      }
+    } else {
+      // обычный выигрыш
+      const winAmount = 20 * currentBonus;
+      balance += winAmount;
+      alert(`Вы выиграли ${winAmount} майнкоинов!`);
+    }
+  } else {
+    // Нет совпадения
+    // Возможна активность "магнит" или "активные символы", чтобы влиять
+    // Можно добавить бонусные активности
+    if (Math.random() < 0.1) {
+      // случайный бонус
+      alert('Вы нашли бонус! Получите +5 майнкоинов.');
+      balance += 5;
+    }
+  }
+
+  updateBalance();
+}
+
+// Обработчики кнопок
+document.getElementById('spinBtn').addEventListener('click', spin);
+document.getElementById('activateBonus').onclick = () => {
+  activateEffect('doubleWin');
+  alert('Эффект двойного выигрыша активен 30 сек!');
+};
+document.getElementById('buyExtraSpin').onclick = () => {
+  if (balance >= 50) {
+    balance -= 50;
+    extraSpins++;
+    updateBalance();
+    alert('Вы купили дополнительный спин!');
+  } else {
+    alert('Недостаточно майнкоинов!');
+  }
+};
+
+</script>
+</body>
+</html>
